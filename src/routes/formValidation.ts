@@ -1,4 +1,10 @@
-import type { BarcodeConfig, ValidationError, ColumnSelectionConfig, FormStep } from './types';
+import type {
+	BarcodeConfig,
+	ValidationError,
+	ColumnSelectionConfig,
+	FormStep,
+	ColumnStats
+} from './types';
 import { validateColumnSelection } from './columnSelectionValidator';
 
 export function validateDimensions(config: BarcodeConfig): ValidationError[] {
@@ -25,7 +31,7 @@ export function validateForm(
 	file: File | null,
 	config: BarcodeConfig,
 	columnConfig?: ColumnSelectionConfig,
-	columnStats?: any[]
+	columnStats?: ColumnStats[]
 ): ValidationError[] {
 	const errors: ValidationError[] = [];
 
@@ -43,11 +49,11 @@ export function validateForm(
 }
 
 export function canProceedToStep(
-	currentStep: FormStep,
+	_currentStep: FormStep,
 	nextStep: FormStep,
 	formData: {
 		file: File | null;
-		csvData: any[];
+		csvData: Record<string, string>[];
 		columnConfig: ColumnSelectionConfig;
 		config: BarcodeConfig;
 	}
@@ -59,7 +65,7 @@ export function canProceedToStep(
 		case 'column-select':
 			return formData.file !== null && formData.csvData.length > 0;
 
-		case 'dimensions':
+		case 'qr-customization':
 			return formData.columnConfig.selectedColumn !== null;
 
 		case 'ready':

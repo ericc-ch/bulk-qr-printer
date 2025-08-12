@@ -43,6 +43,7 @@
 	"dependencies": {
 		"@faker-js/faker": "^9.9.0",
 		"@types/papaparse": "^5.3.16",
-		"papaparse": "^5.5.3"
+		"papaparse": "^5.5.3",
+		"qr-code-styling": "^1.9.2"
 	}
 }

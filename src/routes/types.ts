@@ -16,6 +16,52 @@ export interface BarcodeConfig {
 	height: number;
 }
 
+export interface QRStylingConfig {
+	width: number;
+	height: number;
+	data: string;
+	dotsOptions: {
+		color: string;
+		type: 'rounded' | 'dots' | 'classy' | 'classy-rounded' | 'square' | 'extra-rounded';
+	};
+	cornersSquareOptions: {
+		color: string;
+		type: 'dot' | 'square' | 'extra-rounded';
+	};
+	cornersDotOptions: {
+		color: string;
+		type: 'dot' | 'square';
+	};
+	backgroundOptions: {
+		color: string;
+	};
+	imageOptions?: {
+		hideBackgroundDots: boolean;
+		imageSize: number;
+		margin: number;
+		crossOrigin: string;
+	};
+	qrOptions: {
+		typeNumber: number;
+		mode: 'Numeric' | 'Alphanumeric' | 'Byte' | 'Kanji';
+		errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
+	};
+}
+
+export interface QRCustomizationState {
+	config: QRStylingConfig;
+	previewData: string;
+	isValid: boolean;
+	errors: string[];
+}
+
+export interface QRValidationRules {
+	width: { min: number; max: number };
+	height: { min: number; max: number };
+	imageSize: { min: number; max: number };
+	requiredFields: (keyof QRStylingConfig)[];
+}
+
 export interface ColumnSelectionConfig {
 	selectedColumn: string | null;
 	omitHeaderRow: boolean;
@@ -33,15 +79,17 @@ export interface ColumnStats {
 
 export interface ProcessingConfig extends BarcodeConfig {
 	columnSelection: ColumnSelectionConfig;
+	qrStyling: QRStylingConfig;
 }
 
-export type FormStep = 'upload' | 'preview' | 'column-select' | 'dimensions' | 'ready';
+export type FormStep = 'upload' | 'preview' | 'column-select' | 'qr-customization' | 'ready';
 
 export interface CsvUploadForm {
 	file: File | null;
 	config: BarcodeConfig;
 	csvData: CsvRow[];
 	columnConfig: ColumnSelectionConfig;
+	qrCustomization: QRCustomizationState;
 	currentStep: FormStep;
 	isValid: boolean;
 }

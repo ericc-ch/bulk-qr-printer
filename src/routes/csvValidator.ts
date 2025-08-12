@@ -34,6 +34,30 @@ export function validateFile(file: File): ValidationError[] {
 	return errors;
 }
 
+/**
+ * Checks if a Papa Parse error is a delimiter detection warning that can be safely ignored
+ */
+function isDelimiterDetectionWarning(error: Papa.ParseError): boolean {
+	return Boolean(
+		error.message && error.message.includes('Unable to auto-detect delimiting character')
+	);
+}
+
+/**
+ * Filters out delimiter detection warnings from Papa Parse errors while preserving all other errors
+ */
+function filterDelimiterWarnings(errors: Papa.ParseError[]): Papa.ParseError[] {
+	const filteredErrors = errors.filter((error) => !isDelimiterDetectionWarning(error));
+
+	// Log filtered warnings in development for debugging
+	const filteredCount = errors.length - filteredErrors.length;
+	if (filteredCount > 0 && process.env.NODE_ENV === 'development') {
+		console.debug(`Filtered ${filteredCount} delimiter detection warning(s) from CSV parsing`);
+	}
+
+	return filteredErrors;
+}
+
 export function parseCsv(
 	file: File,
 	omitHeaderRow: boolean = true
@@ -46,7 +70,10 @@ export function parseCsv(
 				const errors: ValidationError[] = [];
 
 				if (results.errors.length > 0) {
-					results.errors.forEach((error) => {
+					// Filter out delimiter detection warnings before processing
+					const filteredErrors = filterDelimiterWarnings(results.errors);
+
+					filteredErrors.forEach((error) => {
 						errors.push({
 							field: 'csv',
 							message: `Row ${error.row}: ${error.message}`

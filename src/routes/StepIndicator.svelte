@@ -12,7 +12,7 @@
 		{ id: 'upload', label: 'Upload', description: 'Select CSV file' },
 		{ id: 'preview', label: 'Preview', description: 'Review data' },
 		{ id: 'column-select', label: 'Column', description: 'Choose barcode data' },
-		{ id: 'dimensions', label: 'Dimensions', description: 'Set size' },
+		{ id: 'qr-customization', label: 'Customize', description: 'Style QR codes' },
 		{ id: 'ready', label: 'Generate', description: 'Create QR codes' }
 	];
 
@@ -29,7 +29,7 @@
 
 <nav class="mb-8">
 	<ol class="flex w-full items-center justify-between">
-		{#each steps as step, index}
+		{#each steps as step, index (step.id)}
 			{@const status = getStepStatus(step.id)}
 			{@const stepNumber = getStepNumber(index)}
 
