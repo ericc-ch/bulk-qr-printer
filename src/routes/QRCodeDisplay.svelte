@@ -11,13 +11,74 @@
 	let isGenerating = false;
 	let generatedCount = 0;
 	let generationError: string | null = null;
+	let containerWidth = 0;
+	let gridElement: HTMLDivElement;
+
+	interface GridConfig {
+		columns: number;
+		itemWidth: number;
+		gap: number;
+	}
+
+	function calculateOptimalGridColumns(
+		qrWidth: number,
+		containerWidth: number,
+		minColumns = 1,
+		maxColumns = 8
+	): GridConfig {
+		if (containerWidth <= 0) {
+			return { columns: minColumns, itemWidth: qrWidth + 32, gap: 16 };
+		}
+
+		const itemPadding = 32;
+		const itemBorder = 2;
+		const totalItemWidth = qrWidth + itemPadding + itemBorder;
+		const minGap = 16;
+
+		let optimalColumns = Math.floor((containerWidth + minGap) / (totalItemWidth + minGap));
+		optimalColumns = Math.max(minColumns, Math.min(maxColumns, optimalColumns));
+
+		const availableWidth = containerWidth - (optimalColumns - 1) * minGap;
+		const actualItemWidth = Math.floor(availableWidth / optimalColumns);
+
+		return {
+			columns: optimalColumns,
+			itemWidth: Math.max(actualItemWidth, totalItemWidth),
+			gap: minGap
+		};
+	}
+
+	function debounce<T extends (...args: unknown[]) => void>(func: T, delay: number): T {
+		let timeoutId: ReturnType<typeof setTimeout>;
+		return ((...args: unknown[]) => {
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => func.apply(null, args), delay);
+		}) as T;
+	}
+
+	$: gridConfig = calculateOptimalGridColumns(config.width || 256, containerWidth);
+
+	$: if (gridElement && gridConfig) {
+		gridElement.style.setProperty('--grid-columns', gridConfig.columns.toString());
+		gridElement.style.setProperty('--grid-item-width', `${gridConfig.itemWidth}px`);
+		gridElement.style.setProperty('--grid-gap', `${gridConfig.gap}px`);
+	}
+
+	const updateContainerWidth = debounce(() => {
+		if (gridElement) {
+			containerWidth = gridElement.offsetWidth;
+		}
+	}, 150);
 
 	onMount(() => {
 		generateAllQRCodes();
+		updateContainerWidth();
+		window.addEventListener('resize', updateContainerWidth);
 	});
 
 	onDestroy(() => {
 		cleanup();
+		window.removeEventListener('resize', updateContainerWidth);
 	});
 
 	async function generateAllQRCodes() {
@@ -213,7 +274,7 @@
 
 	<!-- QR Codes Grid -->
 	<div class="qr-codes-container">
-		<div bind:this={qrContainer} class="qr-grid"></div>
+		<div bind:this={qrContainer} bind:this={gridElement} class="qr-grid"></div>
 	</div>
 
 	<!-- Print Instructions (only visible when printing) -->
@@ -225,16 +286,31 @@
 
 <style>
 	.qr-grid {
+		--grid-columns: 3;
+		--grid-item-width: 256px;
+		--grid-gap: 16px;
+
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 1rem;
+		grid-template-columns: repeat(var(--grid-columns), 1fr);
+		gap: var(--grid-gap);
 		padding: 2rem;
 		max-width: 1200px;
 		margin: 0 auto;
+		justify-items: center;
+	}
+
+	:global(.qr-code-item) {
+		width: var(--grid-item-width);
+		max-width: 100%;
 	}
 
 	/* Print styles */
 	@media print {
+		:global(body) {
+			margin: 0 !important;
+			padding: 0 !important;
+		}
+
 		.no-print {
 			display: none !important;
 		}
@@ -244,9 +320,11 @@
 		}
 
 		.qr-grid {
-			padding: 1rem;
-			gap: 0.5rem;
-			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			--grid-columns: 4;
+			--grid-gap: 8px;
+			padding: 0;
+			max-width: none;
+			grid-template-columns: repeat(var(--grid-columns), 1fr);
 		}
 
 		:global(.qr-code-item) {
@@ -270,15 +348,29 @@
 	/* Responsive adjustments */
 	@media (max-width: 768px) {
 		.qr-grid {
-			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			--grid-columns: 2;
 			padding: 1rem;
-			gap: 0.5rem;
 		}
 	}
 
 	@media (max-width: 480px) {
 		.qr-grid {
-			grid-template-columns: 1fr 1fr;
+			--grid-columns: 1;
+			padding: 0.5rem;
+		}
+	}
+
+	/* Wide screen optimization */
+	@media (min-width: 1440px) {
+		.qr-grid {
+			max-width: 1600px;
+		}
+	}
+
+	/* Container queries fallback for very narrow containers */
+	@container (max-width: 400px) {
+		.qr-grid {
+			--grid-columns: 1;
 		}
 	}
 </style>
