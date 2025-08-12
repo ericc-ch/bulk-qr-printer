@@ -131,6 +131,13 @@
 		});
 	}
 
+	function updateMargin(margin: number) {
+		handleConfigUpdate({
+			...config,
+			margin
+		});
+	}
+
 	function updateDotsOptions(updates: Partial<typeof config.dotsOptions>) {
 		handleConfigUpdate({
 			...config,
@@ -213,6 +220,7 @@
 				<div class="mt-4 text-sm text-gray-600">
 					<p><strong>Preview data:</strong> {previewData || 'Sample QR Code'}</p>
 					<p><strong>Size:</strong> {config.width} × {config.height}px</p>
+					<p><strong>Padding:</strong> {config.margin || 0}px</p>
 				</div>
 			</div>
 		</div>
@@ -284,7 +292,7 @@
 
 						<!-- Dimensions -->
 						<div class="space-y-4">
-							<h5 class="font-medium text-gray-900">Size</h5>
+							<h5 class="font-medium text-gray-900">Size & Spacing</h5>
 							<div class="grid grid-cols-2 gap-4">
 								<div>
 									<label for="width-input" class="mb-1 block text-sm font-medium text-gray-700"
@@ -293,7 +301,7 @@
 									<input
 										id="width-input"
 										type="number"
-										min="100"
+										min="50"
 										max="1000"
 										step="10"
 										value={config.width}
@@ -304,6 +312,7 @@
 											)}
 										class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 									/>
+									<p class="mt-1 text-xs text-gray-500">Range: 50-1000 pixels</p>
 								</div>
 								<div>
 									<label for="height-input" class="mb-1 block text-sm font-medium text-gray-700"
@@ -312,7 +321,7 @@
 									<input
 										id="height-input"
 										type="number"
-										min="100"
+										min="50"
 										max="1000"
 										step="10"
 										value={config.height}
@@ -323,6 +332,45 @@
 											)}
 										class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 									/>
+									<p class="mt-1 text-xs text-gray-500">Range: 50-1000 pixels</p>
+								</div>
+							</div>
+							<div>
+								<label for="margin-input" class="mb-1 block text-sm font-medium text-gray-700"
+									>Padding (Margin)</label
+								>
+								<input
+									id="margin-input"
+									type="number"
+									min="0"
+									max="50"
+									step="1"
+									value={config.margin || 0}
+									on:input={(e) =>
+										updateMargin(parseInt((e.target as HTMLInputElement).value) || 0)}
+									class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+								/>
+								<p class="mt-1 text-xs text-gray-500">
+									Padding around QR code content (0-50 pixels)
+								</p>
+							</div>
+							<div class="rounded-lg bg-gray-50 p-3">
+								<h6 class="mb-2 text-xs font-medium tracking-wide text-gray-700 uppercase">
+									Preview Info
+								</h6>
+								<div class="space-y-1 text-xs text-gray-600">
+									<div class="flex justify-between">
+										<span>Size:</span>
+										<span>{config.width} × {config.height} pixels</span>
+									</div>
+									<div class="flex justify-between">
+										<span>Aspect ratio:</span>
+										<span>{(config.width / config.height).toFixed(2)}:1</span>
+									</div>
+									<div class="flex justify-between">
+										<span>Padding:</span>
+										<span>{config.margin || 0} pixels</span>
+									</div>
 								</div>
 							</div>
 						</div>

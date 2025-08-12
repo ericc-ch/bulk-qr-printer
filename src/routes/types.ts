@@ -20,6 +20,7 @@ export interface QRStylingConfig {
 	width: number;
 	height: number;
 	data: string;
+	margin?: number;
 	dotsOptions: {
 		color: string;
 		type: 'rounded' | 'dots' | 'classy' | 'classy-rounded' | 'square' | 'extra-rounded';
