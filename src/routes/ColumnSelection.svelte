@@ -1,13 +1,9 @@
 <script lang="ts">
 	import type { ColumnSelectionConfig, ColumnStats, ValidationError } from './types';
-	import {
-		analyzeColumns,
-		validateColumnSelection,
-		getColumnWarnings
-	} from './columnSelectionValidator';
+	import { analyzeColumns, getColumnWarnings } from './columnSelectionValidator';
 
 	interface Props {
-		csvData: any[];
+		csvData: Record<string, string>[];
 		config: ColumnSelectionConfig;
 		onConfigChange: (config: ColumnSelectionConfig) => void;
 		errors?: ValidationError[];
@@ -88,7 +84,7 @@
 		</div>
 	{:else}
 		<div class="space-y-4">
-			{#each columnStats as column}
+			{#each columnStats as column (column.name)}
 				<label
 					class="relative flex cursor-pointer rounded-lg border p-4 focus-within:ring-2 focus-within:ring-blue-500 hover:bg-gray-50
 						{config.selectedColumn === column.name ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
@@ -128,7 +124,7 @@
 							<div class="mt-3">
 								<p class="mb-1 text-xs text-gray-600">Sample values:</p>
 								<div class="flex flex-wrap gap-1">
-									{#each column.sampleValues as value}
+									{#each column.sampleValues as value, index (index)}
 										<span
 											class="inline-block max-w-32 truncate rounded bg-gray-100 px-2 py-1 text-xs text-gray-700"
 										>
@@ -170,7 +166,7 @@
 		<div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
 			<h4 class="mb-2 text-sm font-medium text-amber-800">Data Quality Warnings</h4>
 			<ul class="space-y-1 text-sm text-amber-700">
-				{#each warnings as warning}
+				{#each warnings as warning, index (index)}
 					<li>• {warning}</li>
 				{/each}
 			</ul>
@@ -198,7 +194,7 @@
 	{#if validationErrors.length > 0}
 		<div class="rounded-lg border border-red-200 bg-red-50 p-4">
 			<ul class="space-y-1 text-sm text-red-700">
-				{#each validationErrors as error}
+				{#each validationErrors as error (error.field + error.message)}
 					<li>• {error.message}</li>
 				{/each}
 			</ul>

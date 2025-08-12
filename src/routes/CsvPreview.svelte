@@ -22,7 +22,7 @@
 				<table class="min-w-full divide-y divide-gray-300">
 					<thead class="bg-gray-50">
 						<tr>
-							{#each headers as header}
+							{#each headers as header (header)}
 								<th
 									class="px-4 py-3 text-left text-xs font-medium tracking-wide text-gray-500 uppercase"
 								>
@@ -32,9 +32,9 @@
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-200 bg-white">
-						{#each displayData as row, index}
+						{#each displayData as row, index (index)}
 							<tr class={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-								{#each headers as header}
+								{#each headers as header (header)}
 									<td class="max-w-xs truncate px-4 py-3 text-sm text-gray-900">
 										{row[header] || ''}
 									</td>
