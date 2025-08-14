@@ -196,8 +196,10 @@ class ApplicationStore {
 
 		if (emit) {
 			this.emitEvent<FileUploadEvent>('file:parsed', { parsedData: data });
-			// Trigger column config validation cascade
-			this.validateColumnConfiguration();
+			// Defer column config validation cascade to prevent reactive loops
+			queueMicrotask(() => {
+				this.validateColumnConfiguration();
+			});
 		}
 	}
 
@@ -222,8 +224,10 @@ class ApplicationStore {
 				config,
 				previousConfig
 			});
-			// Trigger validation cascade
-			this.validateQRConfiguration();
+			// Defer validation to prevent reactive loops
+			queueMicrotask(() => {
+				this.validateQRConfiguration();
+			});
 		}
 	}
 

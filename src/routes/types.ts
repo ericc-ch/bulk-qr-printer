@@ -36,7 +36,8 @@ export interface QRStylingConfig {
 	backgroundOptions: {
 		color: string;
 	};
-	imageOptions?: {
+	image?: string;
+	imageOptions: {
 		hideBackgroundDots: boolean;
 		imageSize: number;
 		margin: number;
@@ -60,7 +61,16 @@ export interface QRValidationRules {
 	width: { min: number; max: number };
 	height: { min: number; max: number };
 	imageSize: { min: number; max: number };
+	imageFileSize: { max: number }; // in bytes
+	imageDimensions: { min: number; max: number }; // in pixels
 	requiredFields: (keyof QRStylingConfig)[];
+}
+
+export interface ImageUploadConfig {
+	maxFileSize: number; // in bytes
+	allowedFormats: string[];
+	maxDimensions: { width: number; height: number };
+	minDimensions: { width: number; height: number };
 }
 
 export interface ColumnSelectionConfig {

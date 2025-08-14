@@ -20,6 +20,12 @@ export function getDefaultQRConfig(): QRStylingConfig {
 		backgroundOptions: {
 			color: '#ffffff'
 		},
+		imageOptions: {
+			hideBackgroundDots: true,
+			imageSize: 0.2,
+			margin: 0,
+			crossOrigin: 'anonymous'
+		},
 		qrOptions: {
 			typeNumber: 0,
 			mode: 'Byte',
@@ -74,3 +80,25 @@ export const errorCorrectionLevels = [
 	{ value: 'Q', label: 'Quartile (25%)', description: 'Recovers 25% of data' },
 	{ value: 'H', label: 'High (30%)', description: 'Recovers 30% of data' }
 ] as const;
+
+// Image size constants for optimal readability
+export const imageSizeRecommendations = {
+	small: 0.15, // 15% - very safe, minimal impact on readability
+	medium: 0.2, // 20% - good balance of visibility and readability
+	large: 0.3, // 30% - maximum recommended for good readability
+	maximum: 0.5 // 50% - absolute maximum, may affect readability
+} as const;
+
+export const imageUploadConfig = {
+	maxFileSize: 5 * 1024 * 1024, // 5MB
+	allowedFormats: [
+		'image/png',
+		'image/jpeg',
+		'image/jpg',
+		'image/gif',
+		'image/svg+xml',
+		'image/webp'
+	],
+	maxDimensions: { width: 2000, height: 2000 },
+	minDimensions: { width: 50, height: 50 }
+} as const;

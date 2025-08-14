@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import QRCodeStyling from 'qr-code-styling';
 	import type { QRStylingConfig } from './types.js';
+	import type { ValidationError } from './types.js';
 	import { validateQRConfig } from './qrCustomizationValidator.js';
 	import {
 		qrStylePresets,
@@ -12,22 +13,32 @@
 	} from './qrDefaults.js';
 	import ColorPicker from './ColorPicker.svelte';
 	import PatternSelector from './PatternSelector.svelte';
+	import ImageUpload from './ImageUpload.svelte';
+	import ImageSizeControls from './ImageSizeControls.svelte';
 
-	// Props
-	export let config: QRStylingConfig;
-	export let previewData: string;
-	export let onConfigChange: (config: QRStylingConfig) => void;
-	export let onValidationChange: (isValid: boolean, errors: string[]) => void;
+	// Props using Svelte 5 runes syntax
+	let {
+		config,
+		previewData,
+		onConfigChange,
+		onValidationChange
+	}: {
+		config: QRStylingConfig;
+		previewData: string;
+		onConfigChange: (config: QRStylingConfig) => void;
+		onValidationChange: (isValid: boolean, errors: string[]) => void;
+	} = $props();
 
 	// Canvas handling
 	let canvasContainer: HTMLDivElement;
 	let qrCode: QRCodeStyling | null = null;
-	let isLoading = false;
+	let isLoading = $state(false);
 	let updateTimeout: number | null = null;
 
 	// Local state for form controls
-	let activeTab: 'basic' | 'advanced' = 'basic';
-	let showPresets = false;
+	let activeTab = $state<'basic' | 'advanced'>('basic');
+	let showPresets = $state(false);
+	let imageUploadError = $state<ValidationError | null>(null);
 
 	onMount(() => {
 		initializeQRCode();
@@ -42,14 +53,21 @@
 
 		try {
 			isLoading = true;
-			qrCode = new QRCodeStyling({
+			const qrConfig = {
 				...config,
 				qrOptions: {
 					...config.qrOptions,
 					typeNumber: config.qrOptions.typeNumber as 0
 				},
 				data: previewData || 'Sample QR Code'
-			});
+			};
+
+			// Add image if present
+			if (config.image) {
+				qrConfig.image = config.image;
+			}
+
+			qrCode = new QRCodeStyling(qrConfig);
 
 			if (canvasContainer && qrCode) {
 				qrCode.append(canvasContainer);
@@ -73,14 +91,21 @@
 		updateTimeout = window.setTimeout(() => {
 			try {
 				isLoading = true;
-				qrCode?.update({
+				const qrConfig = {
 					...config,
 					qrOptions: {
 						...config.qrOptions,
 						typeNumber: config.qrOptions.typeNumber as 0
 					},
 					data: previewData || 'Sample QR Code'
-				});
+				};
+
+				// Add image if present
+				if (config.image) {
+					qrConfig.image = config.image;
+				}
+
+				qrCode?.update(qrConfig);
 			} catch (error) {
 				console.error('Failed to update QR code:', error);
 			} finally {
@@ -103,8 +128,11 @@
 	function handleConfigUpdate(newConfig: QRStylingConfig) {
 		config = newConfig;
 		onConfigChange(config);
-		validateAndUpdate();
-		updateQRCode();
+		// Defer validation and QR update to prevent reactive loops
+		queueMicrotask(() => {
+			validateAndUpdate();
+			updateQRCode();
+		});
 	}
 
 	function validateAndUpdate() {
@@ -188,10 +216,33 @@
 		});
 	}
 
-	// Reactive validation
-	$: if (config) {
-		validateAndUpdate();
+	function handleImageSelect(imageDataUrl: string | null) {
+		imageUploadError = null;
+		handleConfigUpdate({
+			...config,
+			image: imageDataUrl || undefined
+		});
 	}
+
+	function updateImageOptions(updates: Partial<NonNullable<typeof config.imageOptions>>) {
+		handleConfigUpdate({
+			...config,
+			imageOptions: {
+				...config.imageOptions,
+				...updates
+			}
+		});
+	}
+
+	// Reactive validation with deferred updates to prevent loops
+	$effect(() => {
+		if (config) {
+			// Defer validation to prevent reactive loops during state updates
+			queueMicrotask(() => {
+				validateAndUpdate();
+			});
+		}
+	});
 </script>
 
 <div class="qr-customization mx-auto max-w-6xl p-6">
@@ -221,6 +272,9 @@
 					<p><strong>Preview data:</strong> {previewData || 'Sample QR Code'}</p>
 					<p><strong>Size:</strong> {config.width} × {config.height}px</p>
 					<p><strong>Padding:</strong> {config.margin || 0}px</p>
+					{#if config.image}
+						<p><strong>Center image:</strong> Added</p>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -389,6 +443,21 @@
 								label="Background Color"
 								value={config.backgroundOptions.color}
 								onChange={(color) => updateBackgroundOptions({ color })}
+							/>
+						</div>
+
+						<!-- Center Image -->
+						<div class="space-y-4">
+							<ImageUpload
+								onImageSelect={handleImageSelect}
+								currentImage={config.image || null}
+								error={imageUploadError}
+							/>
+
+							<ImageSizeControls
+								{config}
+								onImageOptionsChange={updateImageOptions}
+								hasImage={!!config.image}
 							/>
 						</div>
 
